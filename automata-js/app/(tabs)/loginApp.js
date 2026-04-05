@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { loginUser } from '../../services/functions/modulo1.js';
+
 //import { log_app } from "../../services/logApp.js";
 
 
@@ -17,15 +19,20 @@ const LoginScreen = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
+    let datalogin= await loginUser(usuario,password)
+    console.log(datalogin,"la")
     // Aquí puedes agregar tu lógica de autenticación real
     if (usuario.trim() === '' || password.trim() === '') {
       Alert.alert('Error', 'Por favor, completa todos los campos');
       return;
     }
-    
-    const resultado = await log_app([usuario,password]);
-    onLoginSuccess(resultado); // envías datos al padre
-
+    else if(datalogin == false || datalogin == undefined){
+      Alert.alert('Error', 'Datos No Existen');
+      return;
+    }
+    else if(datalogin == true){
+    onLoginSuccess(datalogin); // envías datos al padre
+    }    
   };
 
   return (
@@ -63,7 +70,6 @@ const LoginScreen = ({ onLoginSuccess }) => {
               style={styles.input}
               placeholder="********"
               placeholderTextColor="#999"
-              secureTextEntry
               value={password}
               onChangeText={setPassword}
             />

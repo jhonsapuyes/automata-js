@@ -6,6 +6,7 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import LoginWebViewModal from "../components/LoginWebViewModal.js";
 import VideoPreview from "../components/videoPreview.js";
 import BarraSuperior from "./header.js";
+import LoginScreen from "./loginApp.js"; // Importar el nuevo componente
 
 import { listarVideos, postVideo } from '../../services/functions/modulo1.js';
 
@@ -16,7 +17,7 @@ import AgregarCampania from "./agregarPublicidad.js";
 
 export default function HomeScreen() {
 
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // Estado para controlar el login
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Estado para controlar el login
   const [modalLogin, setModalLogin] = useState(false);
   const [urlWebview, setUrlWebview] = useState("https://www.youtube.com/");
   const [datos, setDatos] = useState([]);
@@ -56,7 +57,7 @@ export default function HomeScreen() {
     setWebviewKey(prev => prev + 1);
     setModalLogin(true);
 
-    if(suscribir == false){
+    if (!isAutomating && suscribir == false) {
       setNumero(prev =>
         prev === 0 ? datos.length - 1 : prev - 1
       );
@@ -66,7 +67,6 @@ export default function HomeScreen() {
     setModalLogin(false);
   }
 
-
   const iniciarAutomatizacion = () => {
     if (!datos || datos.length === 0) return;
     let index = numero;
@@ -75,6 +75,7 @@ export default function HomeScreen() {
     // 🔁 cambiar videos cada X tiempo
     videoIntervalRef.current = setInterval(() => {
       index = (index + 1) % datos.length;
+      setNumero(index); 
       abrirVideo(datos[index]);
     }, 12000); // ⏱ cambia cada 10 segundos (ajústalo)
 
@@ -163,9 +164,18 @@ export default function HomeScreen() {
     }
   };
   const agregarPubli = (datoIn) => {
-    //console.log(datoIn)
     postVideo(datoIn);
   };
+
+
+  const handleLoginSuccess = (data) => {
+    setIsLoggedIn(data);
+    console.log(isLoggedIn)
+  };
+
+  if (!isLoggedIn) {
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+  }
   
   return (
     <View style={styles.container}>

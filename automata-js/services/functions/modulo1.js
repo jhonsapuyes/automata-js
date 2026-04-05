@@ -46,7 +46,10 @@ import { Usuarios } from '../sqlite/controller.js';
     return respData;
   };
 
-
+  export const loginUser = async (name, password) => {
+    let respData= await Usuarios.getOne(name, password);
+    return respData[3];
+  };
 
 
 

@@ -33,7 +33,6 @@ const obtenerUsuario = async (name, password) => {
       "SELECT * FROM usuarios WHERE name = ? AND password = ?;",
       [name, password]
     );
-
     // {"id": 1, "name": "ander", "password": "pass", "plaforma": "automata yt-1", "usuarioType": "admin"}
     let respData=[result["plaforma"],result["usuarioType"],result["name"],true];
     return respData; // 👈 un solo objeto (o null)
