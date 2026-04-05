@@ -1,3 +1,5 @@
+
+
 import { Text, TouchableOpacity, View } from "react-native";
 
 export default function BotonesAccion({
@@ -5,8 +7,14 @@ export default function BotonesAccion({
   datos = [],
   numero = 0,
   onAbrirVideo,
-  onCambiarNumero
+  onCambiarNumero,
+    onSuscribir
 }) {
+
+    const ss= ()=>{
+        console.log(datos,"bh")
+    }
+    ss()
 
   return (
     
@@ -20,7 +28,7 @@ export default function BotonesAccion({
     >
 
       {/* BOTÓN SUSCRIBIRSE */}
-      {btnuse[1] == "true"? (
+      {btnuse == false? (
         <TouchableOpacity
           style={{
             marginHorizontal: 7,
@@ -30,16 +38,19 @@ export default function BotonesAccion({
             paddingVertical: 3,
             borderRadius: 10,
           }}
-          onPress={() => onAbrirVideo && onAbrirVideo(datos[numero]?.[1])}
+            onPress={() => {
+                onSuscribir && onSuscribir(); 
+                onAbrirVideo && onAbrirVideo("https://www.youtube.com/");
+            }}
         >
           <Text style={{ fontSize: 27, color: "red" }}>
-            {btnuse[0]}
+            Suscribir
           </Text>
         </TouchableOpacity>
       ):null}
 
       {/* BOTÓN SIGUIENTE */}
-      {btnuse[2] == "true"? (
+      {btnuse == false? (
         <TouchableOpacity
           style={{
             marginHorizontal: 7,

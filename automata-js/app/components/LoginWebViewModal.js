@@ -1,20 +1,22 @@
 
 // CODIGO DEL BOT DE AUTOMATIZACION DE VISTAS DE YOUTUBE
 
-
-
 import { useEffect, useRef, useState } from "react";
 import { Modal, Text, TouchableOpacity, View } from "react-native";
 import { WebView } from "react-native-webview";
 
-export default function LoginWebViewModal({ visible, onClose, url }) {
+export default function LoginWebViewModal({ visible, onClose, url,suscribirbtn }) {
+  console.log(visible, onClose, url, suscribirbtn, "lwvm")
 
-  const SEGUNDOS_OBLIGATORIOS = 21;
+  const SEGUNDOS_OBLIGATORIOS = 9;
 
   const [contador, setContador] = useState(SEGUNDOS_OBLIGATORIOS);
   const [bloqueado, setBloqueado] = useState(true);
 
   const timerRef = useRef(null);
+
+  const [initcount, setInitcount] = useState(false);
+
 
   const iniciarContador = () => {
 
@@ -45,21 +47,18 @@ export default function LoginWebViewModal({ visible, onClose, url }) {
   };
 
   useEffect(() => {
+    (suscribirbtn == false) ? setInitcount(false) : setInitcount(true);
 
-    if (visible) {
-      iniciarContador();
-    }
-
+    if (initcount) {iniciarContador();}
     return () => clearInterval(timerRef.current);
-
-  }, [visible]);
+  }, [initcount]);
 
   // Nuevo useEffect para llamar a onClose cuando el contador llega a 0 y no está bloqueado
   useEffect(() => {
-    if (visible && contador === 0 && !bloqueado) {
+    if (initcount == false && contador === 0 && !bloqueado) {
       onClose();
     }
-  }, [contador, visible, bloqueado, onClose]);
+  }, [contador, initcount, bloqueado, onClose]);
 
   return (
     <Modal
@@ -105,6 +104,7 @@ export default function LoginWebViewModal({ visible, onClose, url }) {
           </View>
 
           <WebView
+              key={url} // 👈 esto soluciona el bug
               source={{ uri: url }}
               javaScriptEnabled
               domStorageEnabled
@@ -114,7 +114,7 @@ export default function LoginWebViewModal({ visible, onClose, url }) {
               style={{ flex: 1}}
 
               // reinicia contador cuando cambia la URL
-              onNavigationStateChange={() => iniciarContador()}
+              onLoadEnd={iniciarContador}
             />
 
         </View>
@@ -123,3 +123,5 @@ export default function LoginWebViewModal({ visible, onClose, url }) {
     </Modal>
   );
 }
+
+

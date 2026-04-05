@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { log_app } from "../../services/logApp.js";
+//import { log_app } from "../../services/logApp.js";
 
 
 const LoginScreen = ({ onLoginSuccess }) => {

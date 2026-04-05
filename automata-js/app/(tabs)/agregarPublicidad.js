@@ -17,7 +17,7 @@ export default function AgregarCampania({ onAgregar }) {
 
   return (
     <View  style={{backgroundColor:"red",width:"100%", height:"69%", paddingTop:"2%"}}>
-
+      
       <View style={{backgroundColor: "#ffffff"}}>
         <View style={{padding: 0,backgroundColor: "#8271711e",margin: 0,alignItems: "center",borderRadius: 20}}>
           

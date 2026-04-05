@@ -3,112 +3,139 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { apiFetch } from "../../services/peticion_api.js";
-import { enviarDato } from "../../services/post_publicitar.js";
-import AgregarCampania from "./agregarPublicidad.js";
+import LoginWebViewModal from "../components/LoginWebViewModal.js";
+import VideoPreview from "../components/videoPreview.js";
 import BarraSuperior from "./header.js";
-import LoginScreen from "./loginApp.js"; // Importar el nuevo componente
-import LoginWebViewModal from "./LoginWebViewModal";
-import VideoPreview from "./videoPreview.js";
+
+import { listarVideos, postVideo } from '../../services/functions/modulo1.js';
+
+import BotonesAccion from "../components/btnHandle.js";
+
+import AgregarCampania from "./agregarPublicidad.js";
+
 
 export default function HomeScreen() {
-  const AUTOMATION_DURATION_MINUTES = 1;
-  const AUTOMATION_DURATION_MS = AUTOMATION_DURATION_MINUTES * 60 * 1000;
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Estado para controlar el login
+  const [isLoggedIn, setIsLoggedIn] = useState(true); // Estado para controlar el login
   const [modalLogin, setModalLogin] = useState(false);
   const [urlWebview, setUrlWebview] = useState("https://www.youtube.com/");
   const [datos, setDatos] = useState([]);
   const [numero, setNumero] = useState(0);
+  const [suscribirbtn, setSuscribirbtn] = useState(false);
+
+  const [ojo, setOjo] = useState(require("../../imgs/ojo roja.jpeg"));
+  const [bocina, setBocina] = useState(require("../../imgs/bocina gris.jpeg"));
+  const [btnuse, setBtnuse] = useState(false);
+  const [webviewKey, setWebviewKey] = useState(0);
+
+  const AUTOMATION_DURATION_MINUTES = 1;
+  const AUTOMATION_DURATION_MS = AUTOMATION_DURATION_MINUTES * 60 * 1000;
   const [isAutomating, setIsAutomating] = useState(false);
   const [remainingTime, setRemainingTime] = useState(AUTOMATION_DURATION_MS);
   const automationTimeoutRef = useRef(null);
   const countdownIntervalRef = useRef(null);
+  const videoIntervalRef = useRef(null);
 
-  const [bocina, setBocina] = useState(require("../../imgs/bocina gris.jpeg"));
-  const [estrella, setEstrella] = useState(require("../../imgs/estrella gris.jpeg"));
-  const [mano, setMano] = useState(require("../../imgs/mano gris.jpeg"));
-  const [ojo, setOjo] = useState(require("../../imgs/ojo gris.jpeg"));
-  const [suscrito, setSuscrito] = useState(require("../../imgs/suscrito gris.jpeg"));
-  const [btnuse, setBtnuse] = useState(["Suscribirse","true","true","true","false"]);
 
   useEffect(() => {
     if (isLoggedIn) {
       cargarDatos();
     }
   }, [isLoggedIn]);
-
   const cargarDatos = async () => {
-    const respuesta = await apiFetch();
-    if (respuesta) {
-      setDatos(respuesta);
-    }
+    let datos= await listarVideos();
+    let dataUrls = datos.map(item => item.urlVideo);
+    setDatos(dataUrls);   
+    console.log(datos.length,"index") 
+    console.log(datos,"index") 
+
   };
 
-  const publicidad = async (ptr1) => {
-    const respuesta = await enviarDato(ptr1);
-    if (respuesta) {
-      setDatos(respuesta);
-      cargarDatos();
-    }
-  };
-
-  const abrirVideo = (url) => {
+  const abrirVideo = (url,suscribir) => {
     setUrlWebview(url);
+    setWebviewKey(prev => prev + 1);
     setModalLogin(true);
-    if (!isAutomating) {
-      (numero == 0) ? setNumero(datos.length-1) : setNumero(numero - 1)
+
+    if(suscribir == false){
+      setNumero(prev =>
+        prev === 0 ? datos.length - 1 : prev - 1
+      );
     }
   };
-
-  const handleModalClose = () => {
+  const handleModalClose= () =>{
     setModalLogin(false);
-    if (isAutomating) {
-      const nextNumero = (numero + 1) % datos.length;
-      setNumero(nextNumero);
-      if (datos.length > 0) {
-        const nextUrl = datos[nextNumero][1];
-        setTimeout(() => {
-          abrirVideo(nextUrl);
-        }, 1000);
-      }
-    }
-  };
+  }
 
+
+  const iniciarAutomatizacion = () => {
+    if (!datos || datos.length === 0) return;
+    let index = numero;
+    // 🔥 abrir primer video
+    abrirVideo(datos[index]);
+    // 🔁 cambiar videos cada X tiempo
+    videoIntervalRef.current = setInterval(() => {
+      index = (index + 1) % datos.length;
+      abrirVideo(datos[index]);
+    }, 12000); // ⏱ cambia cada 10 segundos (ajústalo)
+
+    // ⏳ contador regresivo
+    countdownIntervalRef.current = setInterval(() => {
+      setRemainingTime(prevTime => {
+        if (prevTime <= 1000) {
+          detenerAutomatizacion();
+          return 0;
+        }
+        return prevTime - 1000;
+      });
+    }, 1000);
+
+    // ⏱ tiempo total de automatización
+    automationTimeoutRef.current = setTimeout(() => {
+      detenerAutomatizacion();
+      alert(`Automatización detenida después de ${AUTOMATION_DURATION_MINUTES} minutos.`);
+    }, AUTOMATION_DURATION_MS);
+  };
+  const detenerAutomatizacion = () => {
+    setIsAutomating(false);
+    setModalLogin(false);
+
+    if (automationTimeoutRef.current) {
+      clearTimeout(automationTimeoutRef.current);
+      automationTimeoutRef.current = null;
+    }
+
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+
+    if (videoIntervalRef.current) {
+      clearInterval(videoIntervalRef.current);
+      videoIntervalRef.current = null;
+    }
+
+    setRemainingTime(AUTOMATION_DURATION_MS);
+  };
   const toggleAutomation = () => {
-    setIsAutomating(prev => !prev);
-    if (!isAutomating && datos.length > 0) {
-      abrirVideo(datos[numero][1]);
-      setRemainingTime(AUTOMATION_DURATION_MS);
-      automationTimeoutRef.current = setTimeout(() => {
-        setIsAutomating(false);
-        setModalLogin(false);
-        alert(`Automatización detenida después de ${AUTOMATION_DURATION_MINUTES} minutos.`);
-      }, AUTOMATION_DURATION_MS);
+    setIsAutomating(prev => {
+      const newState = !prev;
 
-      countdownIntervalRef.current = setInterval(() => {
-        setRemainingTime(prevTime => {
-          if (prevTime <= 1000) {
-            clearInterval(countdownIntervalRef.current);
-            return 0;
-          }
-          return prevTime - 1000;
-        });
-      }, 1000);
-    } else if (isAutomating) {
-      setModalLogin(false);
-      if (automationTimeoutRef.current) {
-        clearTimeout(automationTimeoutRef.current);
-        automationTimeoutRef.current = null;
+      if (newState) {
+        setRemainingTime(AUTOMATION_DURATION_MS);
+        iniciarAutomatizacion();
+      } else {
+        detenerAutomatizacion();
       }
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
-        countdownIntervalRef.current = null;
-      }
-      setRemainingTime(AUTOMATION_DURATION_MS);
-    }
+
+      return newState;
+    });
   };
-
+  const formatTime = (ms) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
   useEffect(() => {
     return () => {
       if (automationTimeoutRef.current) clearTimeout(automationTimeoutRef.current);
@@ -116,126 +143,84 @@ export default function HomeScreen() {
     };
   }, []);
 
-  const formatTime = (ms) => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  };
+  const cambiarImagen = (used) => {
+    setBtnuse(used);
 
-  const cambiarImagen = (index) => {
     function resetState() {
-      setEstrella(require("../../imgs/estrella gris.jpeg"));
       setBocina(require("../../imgs/bocina gris.jpeg"));
       setOjo(require("../../imgs/ojo gris.jpeg"));
-      setMano(require("../../imgs/mano gris.jpeg"));
-      setSuscrito(require("../../imgs/suscrito gris.jpeg"));
     }
-    switch (index) {
-      case 1:
-        resetState();
-        setSuscrito(require("../../imgs/suscrito roja.jpeg"));
-        setBtnuse(["Suscribirse","true","true","true","false"]);
-        break;
-      case 2:
-        resetState();
-        setMano(require("../../imgs/mano roja.jpeg"));
-        setBtnuse(["Me Gusta","true","true","true","false"]);
-        break;
-      case 3:
-        resetState();
-        setOjo(require("../../imgs/ojo roja.jpeg"));
-        setBtnuse(["Comenzar a Reproducir","true","false","true","false"]);
-        break;
-      case 4:
+
+    switch (used) {
+      case true:
         resetState();
         setBocina(require("../../imgs/bocina roja.jpeg"));
-        setBtnuse(["Añadir Campaña","false","false","false","true"]);
         break;
-      case 5:
+      case false:
         resetState();
-        setEstrella(require("../../imgs/estrella roja.jpeg"));
-        setBtnuse(["Añadir Campaña","false","false","false","false"]);
+        setOjo(require("../../imgs/ojo roja.jpeg"));
         break;
     }
   };
-
-  useEffect(() => {
-    cambiarImagen(1); 
-  }, []);
-
   const agregarPubli = (datoIn) => {
-    publicidad(datoIn);
+    //console.log(datoIn)
+    postVideo(datoIn);
   };
-
-  const handleLoginSuccess = (data) => {
-    setIsLoggedIn(data);
-  };
-
-  // Si no está logueado, mostrar la pantalla de Login
-  if (!isLoggedIn) {
-    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
-  }
-
-  useEffect(() => {
-  if (remainingTime === 0) {
-    handleModalClose();
-  }
-}, [remainingTime]);
-
-  // Si está logueado, mostrar el contenido original de HomeScreen
+  
   return (
     <View style={styles.container}>
-      <LoginWebViewModal 
-        visible={modalLogin}
-        url={urlWebview}
-        onClose={handleModalClose}
-      />
+      <View>
+        <LoginWebViewModal 
+          key={webviewKey} // 🔥 IMPORTANTE
+          visible={modalLogin}
+          url={urlWebview}
+          onClose={handleModalClose}
+          suscribirbtn={suscribirbtn}
+        />
+      </View>
 
       <View style={styles.header}>
         <BarraSuperior />
       </View>
 
-      {(btnuse[3] == "true") ? <VideoPreview numero={numero} datosBD={datos} onPress={(url) => abrirVideo(url)} /> : null}
+      
+      {(btnuse == false) ? <VideoPreview 
+      numero={numero} 
+      datosBD={datos} 
+      onPress={(url) => abrirVideo(url,false)} 
+      onSuscribir={() => setSuscribirbtn(false)}
+      /> : null}
 
-      {(btnuse[4] == "true") ? <AgregarCampania onAgregar={agregarPubli} /> : null}
+      <View>
+        <BotonesAccion
+          btnuse={btnuse}
+          datos={datos}
+          numero={numero}
+          onAbrirVideo={(url) => abrirVideo(url,true)}
+          onCambiarNumero={(nuevo) => setNumero(nuevo)}
+          onSuscribir={() => setSuscribirbtn(true)}
+        />
+      </View>
 
-      <TouchableOpacity
-      style={{marginVertical:"5%",backgroundColor:"#6eb4bcfd",paddingHorizontal:"2%",justifyContent: 'center',alignItems: 'center',borderRadius: 10}}
-      onPress={toggleAutomation}
-      >
-        <Text style={{fontSize:20,color:"white", fontWeight:"bold",}}>
-          {isAutomating ? "Detener Automatización" : "Iniciar Automatización"}
-        </Text>
-      </TouchableOpacity>
-
-      {isAutomating && (
-        <Text style={styles.countdownText}>Tiempo restante: {formatTime(remainingTime)}</Text>
-      )}
+      <View>
+        {(btnuse == false) ? 
+          <TouchableOpacity
+          style={{marginVertical:"1%",backgroundColor:"#6eb4bcfd",paddingHorizontal:"2%",justifyContent: 'center',alignItems: 'center',borderRadius: 10}}
+          onPress={toggleAutomation}
+          >
+            <Text style={{fontSize:20,color:"white", fontWeight:"bold",}}>
+              {isAutomating ? "Detener Automatización" : "Iniciar Automatización"}
+            </Text>
+          </TouchableOpacity>
+        : null}
+        {isAutomating && (
+          <Text style={styles.countdownText}>Tiempo restante: {formatTime(remainingTime)} {isAutomating}</Text>
+        )}
+      </View>
 
       <View style={styles.imageButtonsContainer} >
         <View style={styles.imageButtonWrapper}> 
-          <TouchableOpacity  onPress={() => cambiarImagen(1)}>                                                                     
-          <Image
-            source={suscrito}
-            style={styles.imageButton}
-            resizeMode="contain"
-          />
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.imageButtonWrapper}>  
-          <TouchableOpacity  onPress={() => cambiarImagen(2)}>                                                      
-          <Image
-            source={mano}
-            style={styles.imageButton}
-            resizeMode="contain"
-          />
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.imageButtonWrapper}> 
-          <TouchableOpacity  onPress={() => cambiarImagen(3)}>                                        
+          <TouchableOpacity  onPress={() => cambiarImagen(false)}>                                                                     
           <Image
             source={ojo}
             style={styles.imageButton}
@@ -243,9 +228,9 @@ export default function HomeScreen() {
           />
           </TouchableOpacity>
         </View>
-        
-        <View style={styles.imageButtonWrapper}>    
-          <TouchableOpacity  onPress={() => cambiarImagen(4)}>                         
+
+        <View style={styles.imageButtonWrapper}> 
+          <TouchableOpacity  onPress={() => cambiarImagen(true)}>                                                                     
           <Image
             source={bocina}
             style={styles.imageButton}
@@ -253,17 +238,11 @@ export default function HomeScreen() {
           />
           </TouchableOpacity>
         </View>
-        
-        <View style={styles.imageButtonWrapper}>   
-          <TouchableOpacity  onPress={() => cambiarImagen(5)}>             
-          <Image
-            source={estrella}
-            style={styles.imageButton}
-            resizeMode="contain"
-          />
-          </TouchableOpacity>
-        </View>
       </View>
+
+      {(btnuse == true) ? <AgregarCampania onAgregar={agregarPubli} /> : null}
+
+
 
       <View style={styles.footer}></View>
     </View>
