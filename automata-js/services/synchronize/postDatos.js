@@ -1,46 +1,72 @@
 
-import db from '../conexionLite.js';
+
+import db from '../sqlite/conexionLite.js';
 import { supabase } from './conexionSuba.js';
 
-export const actualizarVideosSupa = async () => {
+// 🔄 SINCRONIZAR SQLITE → SUPABASE
+export const syncLiteToSupabase = async () => {
   try {
-    const pendientes = await db.getAllAsync(
-      "SELECT * FROM automatayt WHERE pendiente_sync = 1"
+    // 1. Obtener usuarios pendientes de sincronizar
+    const usuarios = await db.getAllAsync(
+      "SELECT * FROM usuarios WHERE pendiente_sync = 1;"
     );
 
-    if (pendientes.length === 0) {
-      console.log("Nada que sincronizar");
+    if (usuarios.length === 0) {
+      //console.log("No hay datos para sincronizar");
       return;
     }
 
-    for (const item of pendientes) {
-      try {
-        const { error } = await supabase
-          .from('automatayt')
-          .upsert({
-            id: item.id,
-            urlVideo: item.urlVideo,
-            plataforma: item.plataforma
-          });
+    //console.log("Enviando a Supabase:", usuarios);
 
-        if (error) {
-          console.log("Error subiendo:", error);
-          continue;
-        }
+    // 2. Limpiar datos (opcional pero recomendado)
+    const cleanUsuarios = usuarios.map(u => ({
+      id: u.id,
+      name: u.name,
+      password: u.password,
+      usuarioType: u.usuarioType,
+      plaforma: u.plaforma,
+      userState: u.userState
+    }));
 
-        await db.runAsync(
-          "UPDATE automatayt SET pendiente_sync = 0 WHERE id = ?",
-          [item.id]
-        );
+    // 3. Subir a Supabase
+    const { error } = await supabase
+      .from('usuarios')
+      .upsert(cleanUsuarios, { onConflict: 'id' });
 
-      } catch (err) {
-        console.log(`Error en item ${item.id}:`, err.message);
-      }
+    if (error) {
+      console.log("Error subiendo a Supabase:", error);
+      return;
     }
 
-    console.log("Sync completado 🚀");
+    // 4. Marcar como sincronizados en SQLite
+    const ids = usuarios.map(u => u.id);
+    const placeholders = ids.map(() => '?').join(',');
 
-  } catch (e) {
-    console.log("Error general sync:", e);
+    await db.runAsync(
+      `UPDATE usuarios SET pendiente_sync = 0 WHERE id IN (${placeholders})`,
+      ids
+    );
+
+    //console.log("Sync completado correctamente 🚀");
+
+  } catch (err) {
+    console.log("Error en sync:", err);
   }
 };
+
+
+// 🧪 EJEMPLO: marcar usuario como pendiente de sync
+export const marcarPendiente = async (id) => {
+  try {
+    await db.runAsync(
+      "UPDATE usuarios SET pendiente_sync = 1 WHERE id = ?;",
+      [id]
+    );
+
+    console.log("Usuario marcado para sincronización");
+  } catch (error) {
+    console.log("Error marcando pendiente:", error);
+  }
+};
+
+

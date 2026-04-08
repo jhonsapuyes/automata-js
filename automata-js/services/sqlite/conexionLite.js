@@ -11,7 +11,8 @@ export const initUsuariosTable = async () => {
       name TEXT,
       password TEXT,
       usuarioType TEXT,
-      plaforma TEXT
+      plaforma TEXT,
+      userState TEXT
     );
   `);
 };
@@ -27,6 +28,8 @@ export const initAutomataYTTable = async () => {
   `);
 };
 
+
+
 export default db;
 
   //(async () => {
@@ -37,12 +40,16 @@ export default db;
   //  console.log(result);
   //})();
 
-//agregar columna
-//const columnas = await db.getAllAsync("PRAGMA table_info(usuarios);");
-//const existe = columnas.some(col => col.name === "email");
-//if (!existe) {
-//  await db.execAsync(`ALTER TABLE usuarios ADD COLUMN email TEXT;`);
-//}
+  //const agregarColumna = async () => {
+  //  try {
+  //    await db.execAsync(`
+  //      ALTER TABLE usuarios ADD COLUMN userState TEXT;
+  //    `);
+  //    console.log("Columna añadida");
+  //  } catch (error) {
+  //    console.log("Error:", error);
+  //  }
+  //};
 
 //borrar tabla
 //await db.execAsync(`

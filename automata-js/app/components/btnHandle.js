@@ -10,12 +10,7 @@ export default function BotonesAccion({
   onCambiarNumero,
     onSuscribir
 }) {
-
-    const ss= ()=>{
-        console.log(datos,"bh")
-    }
-    ss()
-
+  
   return (
     
     <View

@@ -33,8 +33,11 @@ const obtenerUsuario = async (name, password) => {
       "SELECT * FROM usuarios WHERE name = ? AND password = ?;",
       [name, password]
     );
-    // {"id": 1, "name": "ander", "password": "pass", "plaforma": "automata yt-1", "usuarioType": "admin"}
-    let respData=[result["plaforma"],result["usuarioType"],result["name"],true];
+
+    let respData=[
+      result["plaforma"],result["id"],result["name"],
+      result["password"],result["usuarioType"],true,
+      result["userState"],result["plaforma"]];
     return respData; // 👈 un solo objeto (o null)
   } 
   catch (error) {
@@ -42,11 +45,11 @@ const obtenerUsuario = async (name, password) => {
   }
 };
 
-const actualizarUsuario = async (name, password, id) => {
+const actualizarUsuario = async (name, password, userState, sync, id) => {
   try {
     const result = await db.runAsync(
-      "UPDATE usuarios SET name = ?, password = ? WHERE id = ?;",
-      [name, password, id]
+      "UPDATE usuarios SET name = ?, password = ?, userState = ?, pendiente_sync = ? WHERE id = ?;",
+      [name, password, userState,sync, id]
     );
 
     return result;
@@ -114,12 +117,15 @@ const actualizarVideos = async (url, sync, id) => {
     console.log(error);
     throw error;
   }
+  
 };
 
 //eliminarVideos(4)
 //actualizarVideos("https://youtu.be/LCfUHUqXuJE",1,2);
 //insertarVideo("https://youtu.be/C4m7NbapD2Y");
 //obtenerVideos()
+
+obtenerUsuarios()
 
 export const Usuarios = {
   getOne: obtenerUsuario,

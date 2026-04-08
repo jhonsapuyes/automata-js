@@ -7,9 +7,7 @@ import VideoPreview from "../components/videoPreview.js";
 import BarraSuperior from "./header.js";
 import LoginScreen from "./loginApp.js"; // Importar el nuevo componente
 
-import { postVideo, updateUser } from '../../services/functions/modulo1.js';
-import { syncSupaToLiteVideos } from '../../services/synchronize/getVideo.js';
-import { obtenerVideos } from '../../services/synchronize/listarVideo.js';
+import { listarVideos, postVideo, updateUser } from '../../services/functions/modulo1.js';
 import { syncLiteToSupabase } from '../../services/synchronize/postDatos.js';
 import { actualizarVideosSupa } from '../../services/synchronize/postVideo.js';
 
@@ -20,7 +18,7 @@ import AgregarCampania from "./agregarPublicidad.js";
 export default function HomeScreen() {
 
   const [userD, setUserD] = useState([]); // Estado para controlar el login
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Estado para controlar el login
+  const [isLoggedIn, setIsLoggedIn] = useState(true); // Estado para controlar el login
   const [modalLogin, setModalLogin] = useState(false);
   const [urlWebview, setUrlWebview] = useState("https://www.youtube.com/");
   const [datos, setDatos] = useState([]);
@@ -46,15 +44,11 @@ export default function HomeScreen() {
       cargarDatos();
       actualizarVideosSupa()
       sincronize_users()
-      syncSupaToLiteVideos()
     }
   }, [isLoggedIn]);
   const cargarDatos = async () => {
-    //let datos= await listarVideos();
-    //let dataUrls = datos.map(item => item.urlVideo);
-    let dataUrls = await obtenerVideos();
-    console.log(dataUrls,"index")
-
+    let datos= await listarVideos();
+    let dataUrls = datos.map(item => item.urlVideo);
     setDatos(dataUrls);   
   };
   const sincronize_users = async () => {

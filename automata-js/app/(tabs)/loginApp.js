@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -9,18 +9,33 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { loginUser } from '../../services/functions/modulo1.js';
+import { loginUser, pedirDatos, updateUser } from '../../services/functions/modulo1.js';
+import { actualizarusuariosLite } from '../../services/synchronize/getDatos.js';
+import { syncLiteToSupabase } from '../../services/synchronize/postDatos.js';
 
-//import { log_app } from "../../services/logApp.js";
+const LoginScreen = ({ onLoginSuccess }) => {  
+  
+useEffect(() => {
+  const cargarDatos = async () => {
+    const datosu = await pedirDatos();
+  };
+  cargarDatos();
+
+  const init = async () => {
+    await syncLiteToSupabase();       // 2. (opcional) sincroniza hacia Supabase
+    await actualizarusuariosLite();   // 1. Trae datos actualizados desde Supabase
+  };
+  init();
+
+}, []);
 
 
-const LoginScreen = ({ onLoginSuccess }) => {
+
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
     let datalogin= await loginUser(usuario,password)
-    console.log(datalogin,"la")
     // Aquí puedes agregar tu lógica de autenticación real
     if (usuario.trim() === '' || password.trim() === '') {
       Alert.alert('Error', 'Por favor, completa todos los campos');
@@ -30,9 +45,19 @@ const LoginScreen = ({ onLoginSuccess }) => {
       Alert.alert('Error', 'Datos No Existen');
       return;
     }
-    else if(datalogin == true){
-    onLoginSuccess(datalogin); // envías datos al padre
-    }    
+    else if(datalogin[5] == true && datalogin[7] == "automata yt-1"){
+      if(datalogin[6] == "desactivada"){
+        let respD=[datalogin[1],datalogin[2],datalogin[3],datalogin[5]]
+        onLoginSuccess(respD); // envías datos al padre
+        updateUser(datalogin[2],datalogin[3],"activada","1",datalogin[1])
+      }
+      else if(datalogin[6] == "activada"){
+        Alert.alert('Error', 'Cuenta Activada');        
+      }
+    }  
+    else{
+      Alert.alert('Error', 'Datos No Existen');
+    }  
   };
 
   return (

@@ -6,7 +6,6 @@ import { Modal, Text, TouchableOpacity, View } from "react-native";
 import { WebView } from "react-native-webview";
 
 export default function LoginWebViewModal({ visible, onClose, url,suscribirbtn }) {
-  console.log(visible, onClose, url, suscribirbtn, "lwvm")
 
   const SEGUNDOS_OBLIGATORIOS = 9;
 
