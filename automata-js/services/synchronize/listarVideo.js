@@ -2,6 +2,10 @@
 
 import { supabase } from './conexionSuba.js';
 
+const shuffle = (array) => {
+  return array.sort(() => Math.random() - 0.5);
+};
+
 export const obtenerVideos = async () => {
   const { data, error } = await supabase
     .from('automatayt')
@@ -13,5 +17,5 @@ export const obtenerVideos = async () => {
   }
     const urls = data.map(item => item.urlVideo);
 
-  return urls;
+  return shuffle(urls); // 👈 mezclados
 };

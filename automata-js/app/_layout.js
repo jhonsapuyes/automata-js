@@ -5,7 +5,6 @@ import * as Updates from 'expo-updates';
 import { useEffect } from 'react';
 
 export default function RootLayout() {
-
   useEffect(() => {
     async function checkUpdate() {
       try {

@@ -46,20 +46,16 @@ import { supaLogin } from '../synchronize/loginSupa.js';
 
   export const loginUser = async (name, password) => {
     let loginUse= false;
-    let respData= await Usuarios.getOne(name, password);
 
-    if (respData == false || respData[5] == false){
       let respSupa= await supaLogin(name, password)
       loginUse= respSupa
-    }
-    else if(respData == true || respData[5] == true){
-      loginUse= respData;
-    }
+    
+
     return loginUse;
   };
 
-  export const updateUser = async (name, password, userState, sync, id) => {
-    await Usuarios.update(name, password, userState, sync, id);
+  export const updateUser = async (state, device, id) => {
+    await Usuarios.update(state, device, id);
   };
 
 

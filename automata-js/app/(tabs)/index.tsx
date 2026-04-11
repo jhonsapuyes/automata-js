@@ -7,15 +7,19 @@ import VideoPreview from "../components/videoPreview.js";
 import BarraSuperior from "./header.js";
 import LoginScreen from "./loginApp.js"; // Importar el nuevo componente
 
-import { postVideo, updateUser } from '../../services/functions/modulo1.js';
 import { syncSupaToLiteVideos } from '../../services/synchronize/getVideo.js';
 import { obtenerVideos } from '../../services/synchronize/listarVideo.js';
 import { syncLiteToSupabase } from '../../services/synchronize/postDatos.js';
-import { actualizarVideosSupa } from '../../services/synchronize/postVideo.js';
+import { guardarVideoSupa } from '../../services/synchronize/postVideo.js';
 
 import BotonesAccion from "../components/btnHandle.js";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import AgregarCampania from "./agregarPublicidad.js";
+
+import { loginUser } from '../../services/functions/modulo1.js';
+import { actualizarDataUser } from '../../services/synchronize/ctrl_user.js';
+
 
 export default function HomeScreen() {
 
@@ -32,7 +36,9 @@ export default function HomeScreen() {
   const [btnuse, setBtnuse] = useState(false);
   const [webviewKey, setWebviewKey] = useState(0);
 
-  const AUTOMATION_DURATION_MINUTES = 1;
+  const TIMEVISTAVIDEO = 15;
+
+  const AUTOMATION_DURATION_MINUTES = 10;
   const AUTOMATION_DURATION_MS = AUTOMATION_DURATION_MINUTES * 60 * 1000;
   const [isAutomating, setIsAutomating] = useState(false);
   const [remainingTime, setRemainingTime] = useState(AUTOMATION_DURATION_MS);
@@ -44,7 +50,7 @@ export default function HomeScreen() {
   useEffect(() => {
     if (isLoggedIn) {
       cargarDatos();
-      actualizarVideosSupa()
+      //guardarVideoSupa()
       sincronize_users()
       syncSupaToLiteVideos()
     }
@@ -78,17 +84,20 @@ export default function HomeScreen() {
     setModalLogin(false);
   }
 
+  const sleep = (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  };
   const iniciarAutomatizacion = () => {
     if (!datos || datos.length === 0) return;
     let index = numero;
     // 🔥 abrir primer video
     abrirVideo(datos[index]);
     // 🔁 cambiar videos cada X tiempo
-    videoIntervalRef.current = setInterval(() => {
+    videoIntervalRef.current = setInterval(async () => {
       index = (index + 1) % datos.length;
       setNumero(index); 
       abrirVideo(datos[index]);
-    }, 12000); // ⏱ cambia cada 10 segundos (ajústalo)
+    }, (TIMEVISTAVIDEO*1000)); // ⏱ cambia cada 10 segundos (ajústalo)
 
     // ⏳ contador regresivo
     countdownIntervalRef.current = setInterval(() => {
@@ -131,14 +140,12 @@ export default function HomeScreen() {
   const toggleAutomation = () => {
     setIsAutomating(prev => {
       const newState = !prev;
-
       if (newState) {
         setRemainingTime(AUTOMATION_DURATION_MS);
         iniciarAutomatizacion();
       } else {
         detenerAutomatizacion();
       }
-
       return newState;
     });
   };
@@ -176,19 +183,25 @@ export default function HomeScreen() {
     }
   };
   const agregarPubli = (datoIn) => {
-    postVideo(datoIn);
+    //postVideo(datoIn);
+    guardarVideoSupa(datoIn)
   };
 
 
+  const closeApp = async () => {
+    let getUserD= await loginUser(userD[0],userD[1])
+    let ptuser= getUserD[1];
+    
+    const idDeviceUse = await AsyncStorage.getItem('device_id');
 
-  const closeApp = () => {
-    updateUser(userD[1],userD[2],"desactivada",1,userD[0])
+    actualizarDataUser("desactivada",idDeviceUse,ptuser)
+    
     setIsLoggedIn(false);
     setUserD([])
   }
-  const handleLoginSuccess = (data) => {
+  const handleLoginSuccess = async (data) => {
     setUserD(data)
-    setIsLoggedIn(data[3]);
+    setIsLoggedIn(data[2]);
   };
 
   if (isLoggedIn == false) {
@@ -204,6 +217,7 @@ export default function HomeScreen() {
           url={urlWebview}
           onClose={handleModalClose}
           suscribirbtn={suscribirbtn}
+          timeV={TIMEVISTAVIDEO}
         />
       </View>
 
@@ -314,3 +328,5 @@ const styles = StyleSheet.create({
     width: "100%"
   }
 });
+
+// codigo bueno

@@ -9,33 +9,51 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { loginUser, pedirDatos, updateUser } from '../../services/functions/modulo1.js';
-import { actualizarusuariosLite } from '../../services/synchronize/getDatos.js';
-import { syncLiteToSupabase } from '../../services/synchronize/postDatos.js';
+import { loginUser } from '../../services/functions/modulo1.js';
+import { actualizarDataUser } from '../../services/synchronize/ctrl_user.js';
 
-const LoginScreen = ({ onLoginSuccess }) => {  
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
+const LoginScreen = ({ onLoginSuccess }) => {
+
+  const guardarDeviceId = async () => {
+  try {
+    let deviceId = await AsyncStorage.getItem('device_id');
+    if (!deviceId || deviceId === "555") {
+      deviceId = uuidv4();
+      await AsyncStorage.setItem('device_id', deviceId);
+    }
+  } catch (error) {
+          Alert.alert('Error guardando device_id:', error);
+
+  }
+};
   
 useEffect(() => {
-  const cargarDatos = async () => {
-    const datosu = await pedirDatos();
-  };
-  cargarDatos();
 
-  const init = async () => {
-    await syncLiteToSupabase();       // 2. (opcional) sincroniza hacia Supabase
-    await actualizarusuariosLite();   // 1. Trae datos actualizados desde Supabase
+  const initApp = async () => {
+    try {
+      // ✅ 1. Guardar device_id
+      await guardarDeviceId();
+      const idDevice = await AsyncStorage.getItem('device_id');
+    } catch (error) {
+      Alert.alert('login app', error);
+    }
   };
-  init();
+
+  initApp();
+
 
 }, []);
-
-
 
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
     let datalogin= await loginUser(usuario,password)
+    const idDevice = await AsyncStorage.getItem('device_id');
+
     // Aquí puedes agregar tu lógica de autenticación real
     if (usuario.trim() === '' || password.trim() === '') {
       Alert.alert('Error', 'Por favor, completa todos los campos');
@@ -46,12 +64,20 @@ useEffect(() => {
       return;
     }
     else if(datalogin[5] == true && datalogin[7] == "automata yt-1"){
-      if(datalogin[6] == "desactivada"){
-        let respD=[datalogin[1],datalogin[2],datalogin[3],datalogin[5]]
+      if(idDevice == datalogin[8] && datalogin[6] == "activada"){
+        let respD=[datalogin[2],datalogin[3],datalogin[5]]
         onLoginSuccess(respD); // envías datos al padre
-        updateUser(datalogin[2],datalogin[3],"activada","1",datalogin[1])
       }
-      else if(datalogin[6] == "activada"){
+      else if(datalogin[6] == "desactivada"){
+        let respD=[datalogin[2],datalogin[3],datalogin[5]]
+        onLoginSuccess(respD); // envías datos al padre
+              
+        const idDevice = await AsyncStorage.getItem('device_id');
+        //Alert.alert(datalogin.toString());
+
+        actualizarDataUser("activada",idDevice,datalogin[1])
+      }
+      else if(idDevice != datalogin[8] && datalogin[6] == "activada"){
         Alert.alert('Error', 'Cuenta Activada');        
       }
     }  

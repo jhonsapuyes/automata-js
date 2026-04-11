@@ -45,17 +45,26 @@ const obtenerUsuario = async (name, password) => {
   }
 };
 
-const actualizarUsuario = async (name, password, userState, sync, id) => {
+const actualizarUsuario = async (userState, deviceId,userId) => {
   try {
-    const result = await db.runAsync(
-      "UPDATE usuarios SET name = ?, password = ?, userState = ?, pendiente_sync = ? WHERE id = ?;",
-      [name, password, userState,sync, id]
-    );
+    const { data, error } = await supabase
+      .from('usuarios')
+      .update({
+        userState: userState,
+        deviceId: deviceId
+      })
+      .eq('id', userId) // 👈 importante
 
-    return result;
-  } catch (error) {
-    console.log(error);
-    throw error;
+    if (error) {
+      console.log('Error:', error.message);
+      return null;
+    }
+
+    console.log('Usuario actualizado:', data);
+    return data;
+
+  } catch (err) {
+    console.log('Error inesperado:', err);
   }
 };
 

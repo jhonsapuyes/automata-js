@@ -5,9 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import { Modal, Text, TouchableOpacity, View } from "react-native";
 import { WebView } from "react-native-webview";
 
-export default function LoginWebViewModal({ visible, onClose, url,suscribirbtn }) {
+export default function LoginWebViewModal({ visible, onClose, url,suscribirbtn,timeV }) {
 
-  const SEGUNDOS_OBLIGATORIOS = 9;
+  const SEGUNDOS_OBLIGATORIOS = timeV;
 
   const [contador, setContador] = useState(SEGUNDOS_OBLIGATORIOS);
   const [bloqueado, setBloqueado] = useState(true);
@@ -66,7 +66,7 @@ export default function LoginWebViewModal({ visible, onClose, url,suscribirbtn }
     >
       <View style={{ flex: 1,}}>
 
-        <View style={{ padding: 10, flexDirection: "row", justifyContent: "space-between" }}>
+        <View style={{ padding: 10, flexDirection: "row", justifyContent: "space-between", marginTop:"9%" }}>
 
           <TouchableOpacity
             disabled={bloqueado}

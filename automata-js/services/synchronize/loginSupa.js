@@ -21,7 +21,7 @@ export const supaLogin = async (usuario, password) => {
   let dataOut=[
     data[0]["plaforma"],data[0]["id"],data[0]["name"],
     data[0]["password"],data[0]["usuarioType"],true,
-    data[0]["userState"],data[0]["plaforma"]
+    data[0]["userState"],data[0]["plaforma"],data[0]["deviceId"]
   ];
 
   return dataOut;

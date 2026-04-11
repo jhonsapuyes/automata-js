@@ -23,7 +23,7 @@ export default function VideoPreview({ numero = 0, datosBD = [], onPress, onSusc
   if (!url) return null;
 
   return (
-    <View style={{width:"100%",height:600, flexDirection:"column", paddingTop:"2%", backgroundColor:"red"}}>  
+    <View style={{width:"100%",height:500, flexDirection:"column", paddingTop:"2%", backgroundColor:"red"}}>  
       <TouchableOpacity
         style={{ width: "100%", height: "100%" }}
         onPress={() => {
